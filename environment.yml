@@ -1,0 +1,17 @@
+name: titanic_feast
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pandas
+  - scikit-learn
+  - matplotlib
+  - seaborn
+  - pyarrow  # Feast dependency
+  - grpcio  # Feast dependency
+  # - google-cloud-bigquery  # Example: if using BigQuery as offline store
+  - sqlite  # For local file based offline store
+  - pip
+  - pip:
+      - feast[local]  # Install Feast with local file system support

@@ -1,0 +1,75 @@
+
+\
+<
+passenger_idPassenger ID"PassengerIdJtitanic_project
+Î´´Ã°åÃªâ»´ÃàÖ„´
+F
+&
+__dummy"
+__dummy_idJtitanic_project
+Î´´Ã ÛÖªâ»´Ã€«‘¸1"$e2fda2ed-012b-4cbb-9629-d5a4b2cc9304*â»´ÃðµÒÐ2¼
+Ö
+passenger_featurestitanic_projectpassenger_id"
+
+Pclass"
+Sex"
+Age"	
+SibSp"	
+Parch"
+Fare"
+Embarked"	
+Cabin"
+
+Ticket"
+Name2€ç„:™event_timestamp*created_timestampZdata/train_processed.parquetŠ1feast.infra.offline_stores.file_source.FileSource¢data/train_processed.parquet@b
+PassengerIdà
+Î´´Ã°Øë¬â»´Ãèø Ç
+ŽÎ±´à‹åŽµ¶Ãà‹å
+¸Î±´àù‘¸µ¶Ãàù‘
+èÎ±´°é¨øèµ¶Ã°é¨ø
+ÿÎ±´È¢‰<ÿµ¶ÃÈ¢‰<
+ßÏ±´è£àÆß¶¶Ãè£àÆ
+¨Ð±´ø¶üß¨·¶Ãø¶üß
+ÙÐ±´ˆ˜ÁãÙ·¶Ãˆ˜Áã
+÷Ð±´€‹í‰÷·¶Ã€‹í‰
+˜Ñ±´øøØ·˜¸¶ÃøøØ·
+¾Ñ±´Øë°ò¾¸¶ÃØë°ò
+òÑ±´€­º¸ò¸¶Ã€­º¸2Ü
+ö
+survival_featurestitanic_projectpassenger_id"
+Survived2€ç„:™event_timestamp*created_timestampZdata/train_processed.parquetŠ1feast.infra.offline_stores.file_source.FileSource¢data/train_processed.parquet@b
+PassengerIdà
+Î´´Ã›õ¬â»´ÃÐ«ËÐ
+ŽÎ±´à‹åŽµ¶Ãà‹å
+¸Î±´àù‘¸µ¶Ãàù‘
+èÎ±´°é¨øèµ¶Ã°é¨ø
+ÿÎ±´È¢‰<ÿµ¶ÃÈ¢‰<
+ßÏ±´è£àÆß¶¶Ãè£àÆ
+¨Ð±´ø¶üß¨·¶Ãø¶üß
+ÙÐ±´ˆ˜ÁãÙ·¶Ãˆ˜Áã
+÷Ð±´€‹í‰÷·¶Ã€‹í‰
+˜Ñ±´øøØ·˜¸¶ÃøøØ·
+¾Ñ±´Øë°ò¾¸¶ÃØë°ò
+òÑ±´€­º¸ò¸¶Ã€­º¸:½
+œ
+survival_prediction_servicetitanic_projectŽ
+passenger_features
+
+Pclass
+Sex
+Age	
+SibSp	
+Parch
+Fare
+Embarked	
+Cabin
+
+Ticket
+Name*created_timestamp:created_timestampBeevent_timestamp*created_timestampZdata/train_processed.parquet¢data/train_processed.parquet®
+survival_features
+Survived*created_timestamp:created_timestampBeevent_timestamp*created_timestampZdata/train_processed.parquet¢data/train_processed.parquet**Features for predicting passenger survival
+Î´´ÃÀÊÚ®â»´Ãê–¸b£event_timestamp*created_timestampZdata/train_processed.csvŠ1feast.infra.offline_stores.file_source.FileSource¢data/train_processed.csvªtitanic_projectb«event_timestamp*created_timestampZdata/train_processed.parquetŠ1feast.infra.offline_stores.file_source.FileSource¢data/train_processed.parquetªtitanic_projectz7
+titanic_project$ee66ebd4-b7f5-477f-8e0b-ea30dd449f31Š1
+
+titanic_project
+Î´´ÃÈÂÌªÎ´´ÃÈÂÌª
