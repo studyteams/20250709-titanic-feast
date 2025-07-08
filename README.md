@@ -14,21 +14,24 @@
 ## 📁 프로젝트 구조
 
 ```
-feature_repo/
-├── data/
-│   ├── train.csv                    # 원본 훈련 데이터 (891행)
-│   ├── test.csv                     # 원본 테스트 데이터 (418행)
-│   ├── train_processed.csv          # 전처리된 CSV 데이터
-│   ├── test_processed.csv           # 전처리된 CSV 데이터
-│   ├── train_processed.parquet      # Feast용 Parquet 데이터 ⭐
-│   └── test_processed.parquet       # Feast용 Parquet 데이터 ⭐
-├── feature_store.yaml               # Feast 설정 파일
-├── prepare_data.py                  # 데이터 전처리 스크립트
-├── titanic_features.py              # 기본 feature 정의
-├── titanic_example.py               # 기본 예제 실행 스크립트
-├── advanced_titanic_features.py     # 고급 feature 정의
-├── advanced_titanic_example.py      # 고급 예제 실행 스크립트
-└── run_titanic_example.py           # 메인 실행 스크립트
+20250709-titanic-feast/
+├── environment.yml                  # Conda 환경 설정 파일
+├── README.md                        # 프로젝트 메인 매뉴얼
+└── feature_repo/
+    ├── data/
+    │   ├── train.csv                    # 원본 훈련 데이터 (891행)
+    │   ├── test.csv                     # 원본 테스트 데이터 (418행)
+    │   ├── train_processed.csv          # 전처리된 CSV 데이터
+    │   ├── test_processed.csv           # 전처리된 CSV 데이터
+    │   ├── train_processed.parquet      # Feast용 Parquet 데이터 ⭐
+    │   └── test_processed.parquet       # Feast용 Parquet 데이터 ⭐
+    ├── feature_store.yaml               # Feast 설정 파일
+    ├── prepare_data.py                  # 데이터 전처리 스크립트
+    ├── titanic_features.py              # 기본 feature 정의 ⭐
+    ├── titanic_example.py               # 기본 예제 실행 스크립트
+    ├── test_workflow.py                 # Feast CLI 테스트
+    ├── example_repo.py                  # Feast 공식 예제
+    └── run_titanic_example.py           # 메인 실행 스크립트
 ```
 
 ## 🛠️ 설치 및 설정
@@ -52,6 +55,11 @@ cd feature_repo/feature_repo
 
 # 메인 실행 스크립트 실행
 python run_titanic_example.py
+
+# 또는 개별 스크립트 실행
+python prepare_data.py          # 데이터 전처리
+python titanic_example.py       # 기본 예제
+python test_workflow.py         # Feast CLI 테스트
 ```
 
 ## 📊 데이터 전처리 과정
@@ -153,38 +161,206 @@ passenger_features = FeatureView(
 | **Fare** | 요금 | Float32 | 0 ~ 512.3292 |
 | **Embarked** | 승선 항구 | String | C(Cherbourg), Q(Queenstown), S(Southampton) |
 
-### 2. 고급 Features (On-demand)
 
+
+## 📋 titanic_features.py 상세 분석
+
+### **파일의 역할과 중요성**
+
+`titanic_features.py`는 **Feast Feature Store의 핵심 정의 파일**로, ML 모델의 훈련부터 실시간 예측까지 전체 파이프라인에서 사용되는 모든 feature를 정의합니다.
+
+### **1. Entity 정의**
 ```python
-# advanced_titanic_features.py
-@OnDemandFeatureView(
-    sources=[passenger_features, request_source],
-    mode="python",
-    schema=[...]
+passenger = Entity(
+    name="passenger_id",
+    value_type=ValueType.INT64,
+    description="Passenger ID",
+    join_keys=["PassengerId"],
 )
-def derived_features(input_df: pd.DataFrame) -> pd.DataFrame:
-    # 가족 크기
-    df["family_size"] = df["SibSp"] + df["Parch"] + 1
+```
 
-    # 혼자 여행 여부
-    df["is_alone"] = (df["family_size"] == 1).astype(int)
+**Entity의 의미:**
+- **예측 대상**: 승객 개체
+- **Join Key**: 데이터를 연결하는 고유 식별자 (PassengerId)
+- **Value Type**: 64비트 정수형
 
-    # 연령대 분류
-    df["age_group"] = df["Age"].apply(lambda x:
-        "child" if x < 18 else
-        "young_adult" if x < 30 else
-        "adult" if x < 50 else "senior")
+### **2. Data Source 정의**
+```python
+passenger_source = FileSource(
+    path="data/train_processed.parquet",
+    timestamp_field="event_timestamp",
+    created_timestamp_column="created_timestamp",
+)
+```
 
-    # 1인당 요금
-    df["fare_per_person"] = df["Fare"] / df["family_size"]
+**FileSource의 특징:**
+- **Parquet 형식**: 효율적인 컬럼 기반 저장
+- **Timestamp 필드**: 시간 기반 feature store 구축
+- **Created Timestamp**: 데이터 생성 시간 추적
 
-    # 이름에서 호칭 추출
-    df["title"] = df["Name"].apply(lambda x: x.split(',')[1].split('.')[0].strip())
+### **3. Feature View 상세 분석**
 
-    # 객실 데크
-    df["cabin_deck"] = df["Cabin"].apply(lambda x: x[0] if len(x) > 0 else "Unknown")
+#### **passenger_features (기본 승객 정보)**
+```python
+passenger_features = FeatureView(
+    name="passenger_features",
+    entities=[passenger],
+    ttl=timedelta(days=365),  # 1년간 유효
+    schema=[
+        Field(name="PassengerId", dtype=Int64),
+        Field(name="Pclass", dtype=Int64),      # 객실 등급
+        Field(name="Sex", dtype=String),        # 성별
+        Field(name="Age", dtype=Float32),       # 나이
+        Field(name="SibSp", dtype=Int64),       # 형제자매/배우자 수
+        Field(name="Parch", dtype=Int64),       # 부모/자녀 수
+        Field(name="Fare", dtype=Float32),      # 요금
+        Field(name="Embarked", dtype=String),   # 승선 항구
+        Field(name="Cabin", dtype=String),      # 객실
+        Field(name="Ticket", dtype=String),     # 티켓 번호
+        Field(name="Name", dtype=String),       # 이름
+    ],
+    source=passenger_source,
+    online=True,  # 실시간 서빙 가능
+)
+```
 
-    return df
+**각 Feature의 비즈니스 의미:**
+- **Pclass**: 사회적 지위와 생존 가능성의 상관관계
+- **Sex**: "여성과 어린이 먼저" 원칙의 반영
+- **Age**: 어린이 우선 원칙과 노인 생존률 차이
+- **SibSp/Parch**: 가족 단위 생존 패턴
+- **Fare**: 경제적 지위와 구명정 접근성
+- **Embarked**: 승선 항구별 사회적 배경 차이
+
+#### **survival_features (생존 여부)**
+```python
+survival_features = FeatureView(
+    name="survival_features",
+    entities=[passenger],
+    ttl=timedelta(days=365),
+    schema=[
+        Field(name="PassengerId", dtype=Int64),
+        Field(name="Survived", dtype=Int64),    # 생존 여부 (0/1)
+    ],
+    source=passenger_source,
+    online=True,
+)
+```
+
+**Target Variable:**
+- **Survived**: 이진 분류 문제의 타겟 변수
+- **0**: 사망, **1**: 생존
+
+### **4. Feature Service 정의**
+```python
+survival_prediction_service = FeatureService(
+    name="survival_prediction_service",
+    features=[
+        passenger_features,
+        survival_features,
+    ],
+    description="Features for predicting passenger survival",
+)
+```
+
+**Feature Service의 역할:**
+- **Feature 조합**: 여러 Feature View를 하나로 통합
+- **모델 버전 관리**: 특정 모델에 필요한 feature 세트 정의
+- **재사용성**: 동일한 feature 세트를 여러 모델에서 활용
+
+### **5. 실제 사용 패턴**
+
+#### **Feature Store 등록**
+```python
+# titanic_example.py에서 사용
+from titanic_features import passenger, passenger_features, survival_features
+
+def apply_feature_definitions(store):
+    store.apply([passenger])
+    store.apply([passenger_features, survival_features])
+```
+
+#### **Historical Features (훈련용)**
+```python
+training_df = store.get_historical_features(
+    entity_df=entity_df,
+    features=[
+        "passenger_features:Pclass",
+        "passenger_features:Sex",
+        "passenger_features:Age",
+        "passenger_features:SibSp",
+        "passenger_features:Parch",
+        "passenger_features:Fare",
+        "passenger_features:Embarked",
+        "survival_features:Survived"  # 타겟 변수
+    ],
+    full_feature_names=True
+).to_df()
+```
+
+#### **Online Features (예측용)**
+```python
+online_features = store.get_online_features(
+    features=[
+        "passenger_features:Pclass",
+        "passenger_features:Sex",
+        "passenger_features:Age",
+        "passenger_features:SibSp",
+        "passenger_features:Parch",
+        "passenger_features:Fare",
+        "passenger_features:Embarked"
+    ],
+    entity_rows=[{"PassengerId": pid} for pid in passenger_ids]
+).to_df()
+```
+
+### **6. 핵심 가치와 장점**
+
+#### **재사용성**
+- 한 번 정의하면 여러 모델에서 재사용
+- 훈련과 예측에서 동일한 feature 정의 사용
+
+#### **일관성**
+- 모든 환경(개발, 테스트, 프로덕션)에서 동일한 feature
+- 데이터 타입과 스키마 보장
+
+#### **확장성**
+- 새로운 feature 추가 시 Feature View만 수정
+- 기존 코드 변경 없이 feature 확장 가능
+
+#### **실시간성**
+- `online=True` 설정으로 실시간 feature serving
+- 낮은 지연시간으로 예측 서비스 제공
+
+### **7. 실무 활용 사례**
+
+#### **MLOps 파이프라인**
+```python
+# 1. Feature 정의
+# titanic_features.py에서 정의
+
+# 2. Feature Store 등록
+store.apply([passenger_features, survival_features])
+
+# 3. 모델 훈련
+training_data = store.get_historical_features(...)
+
+# 4. 실시간 예측
+prediction_features = store.get_online_features(...)
+```
+
+#### **마이크로서비스 아키텍처**
+```python
+# 각 서비스가 필요한 feature만 선택적 사용
+basic_features = ["passenger_features:Pclass", "passenger_features:Sex"]
+advanced_features = basic_features + ["derived_features:family_size"]
+```
+
+#### **A/B 테스트 지원**
+```python
+# 다른 feature 조합으로 모델 성능 비교
+model_a_features = ["passenger_features:Pclass", "passenger_features:Sex"]
+model_b_features = model_a_features + ["passenger_features:Age", "passenger_features:Fare"]
 ```
 
 ## 🤖 모델 훈련 과정
@@ -443,25 +619,7 @@ def production_workflow():
 
 ## 🚀 고급 기능
 
-### 1. On-demand Feature View
-
-실시간으로 계산되는 파생 features:
-
-```python
-# 가족 크기
-family_size = SibSp + Parch + 1
-
-# 혼자 여행 여부
-is_alone = (family_size == 1)
-
-# 연령대 분류
-age_group = "child" if age < 18 else "young_adult" if age < 30 else "adult" if age < 50 else "senior"
-
-# 1인당 요금
-fare_per_person = Fare / family_size
-```
-
-### 2. Feature Service
+### 1. Feature Service
 
 여러 Feature View를 조합한 서비스:
 
@@ -472,6 +630,36 @@ survival_prediction_service = FeatureService(
     description="Features for predicting passenger survival",
 )
 ```
+
+### 2. Feast CLI 활용
+
+```bash
+# Feature store 초기화
+feast init titanic_feature_store
+
+# Feature 정의 적용
+feast apply
+
+# Feature materialization
+feast materialize 2023-01-01T00:00:00 2023-12-31T23:59:59
+
+# Online store 상태 확인
+feast get-online-features \
+    --feature-service survival_prediction_service \
+    --entity PassengerId:1
+```
+
+### 3. 다양한 실행 스크립트
+
+#### **test_workflow.py**
+- Feast CLI 명령어 테스트
+- Push source 활용 방법
+- Materialization 과정 시연
+
+#### **example_repo.py**
+- Feast 공식 예제 패턴
+- 표준적인 feature store 구축 방법
+- 프로덕션 환경 준비
 
 ## 🔧 사용법
 
@@ -484,8 +672,11 @@ python prepare_data.py
 # 2. 기본 예제 실행
 python titanic_example.py
 
-# 3. 고급 예제 실행
-python advanced_titanic_example.py
+# 3. 메인 실행 스크립트 (전체 과정)
+python run_titanic_example.py
+
+# 4. Feast CLI 테스트
+python test_workflow.py
 ```
 
 ### 2. 개별 기능 테스트
@@ -507,6 +698,40 @@ features = store.get_online_features(
 ).to_df()
 
 print(features)
+```
+
+### 3. 실행 순서 가이드
+
+#### **첫 번째 실행 (권장)**
+```bash
+cd feature_repo/feature_repo
+python run_titanic_example.py
+```
+- 전체 과정을 한 번에 실행
+- 데이터 전처리부터 예측까지 모든 단계 포함
+
+#### **개별 단계 실행**
+```bash
+# 1. 데이터 준비
+python prepare_data.py
+
+# 2. 기본 예제
+python titanic_example.py
+
+# 3. Feast CLI 테스트
+python test_workflow.py
+```
+
+#### **문제 해결용**
+```bash
+# 환경 확인
+conda activate titanic_feast
+
+# 패키지 설치 확인
+pip list | grep feast
+
+# 데이터 파일 확인
+ls -la data/
 ```
 
 ## 📊 결과 해석
@@ -533,7 +758,6 @@ print(features)
 - **Entity**: 예측 대상 (PassengerId)
 - **Feature View**: feature 정의 및 데이터 소스
 - **Feature Service**: 여러 feature view 조합
-- **On-demand Feature View**: 실시간 계산되는 파생 feature
 
 ### 2. 데이터 전처리
 - **CSV → Parquet**: Feast 호환성을 위한 형식 변환
@@ -543,7 +767,6 @@ print(features)
 ### 3. Feature Engineering
 - **기본 Features**: 원본 데이터에서 직접 추출
 - **파생 Features**: 기존 features 조합으로 생성
-- **On-demand 계산**: 실시간 feature 계산
 
 ### 4. Online Serving 메커니즘
 - **FileSource + online=True**: Materialization 없이도 실시간 서빙 가능
@@ -564,7 +787,6 @@ print(features)
 
 ### 3. 실시간 시스템
 - 실시간 승객 정보 업데이트
-- 동적 feature 계산
 - A/B 테스트 지원
 
 ## 📚 참고 자료

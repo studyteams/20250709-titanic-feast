@@ -2,12 +2,12 @@
 \
 <
 passenger_idPassenger ID"PassengerIdJtitanic_project
-Î´´Ã°åÃªâ»´ÃàÖ„´
+Î´´Ã°åÃª€Ã´ÃØŒ­Æ
 F
 &
 __dummy"
 __dummy_idJtitanic_project
-Î´´Ã ÛÖªâ»´Ã€«‘¸1"$e2fda2ed-012b-4cbb-9629-d5a4b2cc9304*â»´ÃðµÒÐ2¼
+Î´´Ã ÛÖª€Ã´Ã¨¾ïÈ1"$097c71db-7fa0-4621-b767-b213c4acd936*€Ã´ÃàÆôÈ2¼
 Ö
 passenger_featurestitanic_projectpassenger_id"
 
@@ -68,7 +68,9 @@ __dummy_idJtitanic_project
 Name*created_timestamp:created_timestampBeevent_timestamp*created_timestampZdata/train_processed.parquet¢data/train_processed.parquet®
 survival_features
 Survived*created_timestamp:created_timestampBeevent_timestamp*created_timestampZdata/train_processed.parquet¢data/train_processed.parquet**Features for predicting passenger survival
-Î´´ÃÀÊÚ®â»´Ãê–¸b£event_timestamp*created_timestampZdata/train_processed.csvŠ1feast.infra.offline_stores.file_source.FileSource¢data/train_processed.csvªtitanic_projectb«event_timestamp*created_timestampZdata/train_processed.parquetŠ1feast.infra.offline_stores.file_source.FileSource¢data/train_processed.parquetªtitanic_projectz7
+Î´´ÃÀÊÚ®â»´Ãê–¸b£event_timestamp*created_timestampZdata/train_processed.csvŠ1feast.infra.offline_stores.file_source.FileSource¢data/train_processed.csvªtitanic_projectb«event_timestamp*created_timestampZdata/train_processed.parquetŠ1feast.infra.offline_stores.file_source.FileSource¢data/train_processed.parquetªtitanic_projectbvŠfeast.data_source.RequestSource’(
+PassengerId
+current_timestamp¢prediction_requestªtitanic_projectz7
 titanic_project$ee66ebd4-b7f5-477f-8e0b-ea30dd449f31Š1
 
 titanic_project
